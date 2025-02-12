@@ -193,7 +193,6 @@ class MMDoubleStreamBlock(nn.Module):
         super().__init__()
 
         self.deterministic = False
-        self.audio_enable = audio_enable
         self.heads_num = heads_num
         head_dim = hidden_size // heads_num
         mlp_hidden_dim = int(hidden_size * mlp_width_ratio)
@@ -640,7 +639,6 @@ class Magic141VideoDiffusionTransformer(ModelMixin, ConfigMixin):
         self.unpatchify_channels = self.out_channels
         self.guidance_embed = guidance_embed
         self.rope_dim_list = rope_dim_list
-        self.audio_enable = audio_enable
 
         # Text projection. Default to linear projection.
         # Alternative: TokenRefiner. See more details (LI-DiT): http://arxiv.org/abs/2406.11831
@@ -1035,18 +1033,6 @@ class Magic141VideoDiffusionTransformer(ModelMixin, ConfigMixin):
         # text modulation
         vec = vec + self.vector_in(text_states_2)
 
-        if self.audio_enable:
-            # 1， 3072， 21， 130 （10 * 13）
-            ori_audio_feature = audio_feature
-            audio_feature_arr = rearrange(audio_feature, 'bz c f (w b) -> bz f w b c',b=13, w=10) # 65 81
-            audio_feature_arr = rearrange(audio_feature_arr, 'bz f w b (g c) -> bz f w b g c',g = 4)
-            audio_feature_arr = audio_feature_arr[:, :, :, :, 3, :] # -> bz, f, w, b, c
-
-            audio_feature_all = self.audio_proj(audio_feature_arr) # 1, 3072, 21, 130
-
-        # TODO: add audio information into the model.
-
-
         # guidance modulation
         if self.guidance_embed:
             print("passing here to add guidance")
@@ -1091,17 +1077,6 @@ class Magic141VideoDiffusionTransformer(ModelMixin, ConfigMixin):
                 max_seqlen_kv,
                 freqs_cis,
             ]
-            if self.audio_enable and (layer_num in self.double_insert_list):
-                audio_block = self.audio_insert_model[layer_num // self.double_skip]
-                double_block_args.extend(
-                    [
-                        audio_block,
-                        audio_feature_all,
-                        bsz,
-                        ot,
-                        face_mask_attn,
-                    ]
-                )
             img, txt = block(*double_block_args)
             
         # Merge txt and img to pass through single stream blocks.
@@ -1120,18 +1095,6 @@ class Magic141VideoDiffusionTransformer(ModelMixin, ConfigMixin):
                     max_seqlen_kv,
                     (freqs_cos, freqs_sin),
                 ]
-                if self.audio_enable and (layer_num in self.single_insert_list):
-                    audio_block = self.audio_insert_model[len(self.double_insert_list) + layer_num // self.single_skip]
-                    single_block_args.extend(
-                        [
-                            audio_block,
-                            audio_feature_all,
-                            bsz,
-                            ot,
-                            face_mask_attn,
-                            img.shape[1],
-                        ]
-                    )
                 x = block(*single_block_args)
 
         img = x[:, :img_seq_len, ...]

@@ -1,4 +1,4 @@
-from .models_audio_simpleca_v3_Ackpt import Magic141VideoDiffusionTransformer, MAGIC_141_VIDEO_CONFIG
+from .models import Magic141VideoDiffusionTransformer, MAGIC_141_VIDEO_CONFIG
 
 def load_model(args, in_channels, out_channels, factor_kwargs):
     """load Magic141 video model
