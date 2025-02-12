@@ -14,7 +14,7 @@ model:
   module_name: model_dit.lightning.magic_141_ti2v
   class_name: EmoLitModule
   denoising_model:
-    module_name: model_dit.models.magic_141_video.modules.models_audio_simpleca_v3_Ackpt
+    module_name: model_dit.models.magic_141_video.modules.models
     class_name: Magic141VideoDiffusionTransformer
   audio_enable: false # to run TI2V.
   activation_checkpointing_models: 
@@ -95,54 +95,12 @@ test_data:
   height: 540
   width: 960
   image_paths_and_scales:
-    # - [
-    #   "test_examples/1.png",
-    #   21,
-    #   1.2,
-    #   "A group of friends laughing and talking animatedly around a campfire, with sparks flying and flames crackling."
-    # ]
-    # - [
-    #   "test_examples/2.png",
-    #   21,
-    #   1.2,
-    #   "A young woman giving an inspiring speech."
-    # ]
-    # - [
-    #   "test_examples/3.png",
-    #   21,
-    #   1.2,
-    #   "a woman is talking"
-    # ]
-    # - [
-    #   "test_examples/5.png",
-    #   21,
-    #   1.2,
-    #   "A student giving a presentation in a classroom attentively"
-    # ]
-    # - [
-    #   "test_examples/10.jpg",
-    #   21,
-    #   1.2,
-    #   "A person talking in a room , with a concerned expression on their face"
-    # ]
-    # - [
-    #   "test_examples/11.png",
-    #   21,
-    #   1.2,
-    #   "A young woman with a determined expression kneels before another person, her posture suggesting supplication or entreaty."
-    # ]
     - [
       "/mnt/weka/test_data/widescreen/youtuber01_closeup_896x512.jpg",
       31,
       1.2,
       "A businessman giving a presentation in a room"
     ]
-    # - [
-    #   "test_examples/15.png",
-    #   21,
-    #   1.2,
-    #   "A small dog standing in a field of tall grass, looking around curiously with its ears perked up."
-    # ]
 
 inference:
   inversion: false

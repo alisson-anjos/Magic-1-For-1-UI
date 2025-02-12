@@ -843,7 +843,7 @@ class Magic141VideoDiffusionTransformer(ModelMixin, ConfigMixin):
             pretrained_model_path = os.path.join(pretrained_model_path, subfolder)
         print(f"loaded loaded Magic141 3D Transformer from {pretrained_model_path} ...")
 
-        config_file = "configs/model/hy_video_dit_config.json"
+        config_file = "configs/model/video_dit_config.json"
         if not os.path.isfile(config_file):
             raise RuntimeError(f"{config_file} does not exist")
         with open(config_file, "r") as f:

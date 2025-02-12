@@ -20,9 +20,6 @@ from model_dit.models.magic_141_video.text_encoder import TextEncoder
 from model_dit.models.magic_141_video.text_encoder.text_encoder_vlm import TextEncoderVLM, LLAVA_LLAMA_3_8B_HUMAN_IMAGE_PROMPT
 from model_dit.models.magic_141_video.constants import PROMPT_TEMPLATE
 
-from model_dit.utils.ds_ema_bk import DSEma
-
-
 @torch.no_grad()
 def noise_inversion(model_infer,
                     noise_tensor,
@@ -127,9 +124,6 @@ class EmoLitModule(LightningModule):
         )
         self.model.requires_grad_(False)
         self.model.to(device="cpu", dtype=eval(config.model.dtype))
-        
-        # if "strategy" in config.trainer and "deep" in config.trainer.strategy:
-        #     self.model.enable_gradient_checkpointing()
 
         # clip
         if config.model.clip_name is not None:
@@ -181,14 +175,6 @@ class EmoLitModule(LightningModule):
             ).to(dtype=eval(config.model.text_encoder_vlm_dtype))
             self.text_encoder_vlm.to("cpu")
 
-    def setup(self, stage=None):
-        if self.config.enable_ema:
-            self.model_ema = DSEma(self.model, rank=self.trainer.strategy.global_rank)
-
-    def inference_setup(self):
-        self.model_ema = DSEma(self.model, rank=0)
-        self.model_ema.copy_to_non_distributed(self.model)
-
     def _get_scheduler(self) -> Any:
         if self.config.get("noise_scheduler", "flow") == "flow":
             from ..models.magic_141_video.diffusion.schedulers import FlowMatchDiscreteScheduler
@@ -220,21 +206,6 @@ class EmoLitModule(LightningModule):
             params_to_update.append({'params': param, 'lr': param_lr})
         rank_zero_info(f"trainable params len is {len(params_to_update)}")
 
-
-        # if "strategy" in self.config.trainer \
-        #     and "deep" in self.config.trainer.strategy  \
-        #     and "offload" in self.config.trainer.strategy:
-        #     import deepspeed
-        #     optimizer = deepspeed.ops.adam.DeepSpeedCPUAdam(
-        #         params_to_update,
-        #         lr=self.config.optimizer.lr,
-        #         weight_decay=self.config.optimizer.weight_decay,
-        #         betas=(self.config.optimizer.adam_beta1, self.config.optimizer.adam_beta2),
-        #         eps=self.config.optimizer.adam_epsilon,
-        #         adamw_mode=True #you have to use adamw mode
-        #     )
-
-        # else:
         optimizer = torch.optim.AdamW(
             params_to_update,
             lr=self.config.optimizer.lr,
@@ -475,7 +446,6 @@ class EmoLitModule(LightningModule):
         # Get audio and face mask
         img_height, img_width = image.shape[-2:]
 
-
         self.text_encoder.to(self.device)
         (
             prompt_embeds,
@@ -592,7 +562,6 @@ class EmoLitModule(LightningModule):
                         text_states=prompt_embeds[:1].to(device=self.device, dtype=torch.float32),  # [2, 256, 4096]
                         text_mask=prompt_mask[:1],  # [2, 256]
                         text_states_2=prompt_embeds_2[:1].to(device=self.device, dtype=torch.float32),  # [2, 768]
-                        # auto_guidence_scale=self.config.auto_guidence_scale,
                         timestep=ts[:1],
                     ).sample
                     
@@ -616,7 +585,6 @@ class EmoLitModule(LightningModule):
                         text_states=prompt_embeds.to(device=self.device, dtype=torch.float32),  # [2, 256, 4096]
                         text_mask=prompt_mask,  # [2, 256]
                         text_states_2=prompt_embeds_2.to(device=self.device, dtype=torch.float32),  # [2, 768]
-                        # auto_guidence_scale=self.config.auto_guidence_scale,
                         timestep=ts,
                     ).sample
                 
@@ -627,10 +595,8 @@ class EmoLitModule(LightningModule):
             ).prev_sample  # outputs are prev_sample and pred_original_sample
 
         return self.decode_latents(latent)
-        # if self.config.inference.do_classifier_free_guidance:
 
     def decode_latents(self, latents: torch.Tensor) -> torch.Tensor:
-        # import pdb; pdb.set_trace()
         latents = 1 / self.vae.config.scaling_factor * latents
         # b c f h w
         image = self.vae.decode(latents.to(dtype=self.vae.dtype)).sample # first frame is the single image.
@@ -660,13 +626,9 @@ class EmoLitModule(LightningModule):
             # print("Not Using flow matching")
             if self.train_noise_scheduler.config.prediction_type == "epsilon":
                 target = noise
-                # match the dim 2 to model_pred
-                # target = target.repeat(1, 1, model_pred.shape[2] // target.shape[2], 1, 1)
 
             elif self.train_noise_scheduler.config.prediction_type == "v_prediction":
                 target = self.train_noise_scheduler.get_velocity(latents, noise, timesteps)
-                # match the dim 2 to model_pred
-                # target = target.repeat(1, 1, model_pred.shape[2] // target.shape[2], 1, 1)
 
             if self.config.loss.snr_gamma == 0:
                 base_loss = F.mse_loss(model_pred.float(), target.float(), reduction="none")
@@ -724,58 +686,12 @@ class EmoLitModule(LightningModule):
         pixel_values_pose = batch["pixel_values_pose"].to(self.device) # b c h w    
         audio_feature = batch["target_wav_fea"].to(self.device) # b f n c, n is num of token for audio
 
-            # print(f"{pixel_values_pose.min()=} {pixel_values_pose.max()=} {pixel_values_pose.shape=}")
-        # ref_uncond = torch.rand(ref_image_latents.shape[0]) < self.config.loss.uncond_ratio
-        
-        # face mask conditioning
-        # pose_uncond = torch.rand(pixel_values_pose.shape[0]) < self.config.loss.uncond_ratio
-        # pixel_values_pose[pose_uncond] = 1.0 # 1.0 is the mask for uncond
-
-        '''
-        pose_uncond = [1,1]
-        Pixel_value_pose = 1.0 => 全 1
-        audio_feature => Cross Attention  => noise_map => loss
-        loss  = loss*face_mask(1.0)
-
-        pose_uncond = [1,0]
-        Pixel_value_pose = [1,0]
-        audio_feature => Cross Attention  => noise_map => loss
-        loss  = loss*face_mask
-
-        '''
-        #pose uncond => 1.0, pose cond => part area => 1.0
-
         # audio conditioning
         audio_uncond = torch.rand(audio_feature.shape[0]) < self.config.loss.uncond_ratio
         audio_feature[audio_uncond] = 0
         
-        # we do not add face mask dropout during the training.
-        # if audio_uncond == True: # if audio is uncond, then the mask condition is 0 as well
-        #     pixel_values_pose[audio_uncond] = 0.0
-
-        # face mask b c h w -> b 1 f h w by repeat
-        # print(f"{pixel_values_vid.shape=}")
-        # print(f"{pixel_values_pose.shape=}")
-        # print(f"{audio_feature.shape=}")
-        # print(f"{pixel_values_ref_img.shape=}")
         pixel_values_pose = pixel_values_pose[:, :1, :, :].unsqueeze(2).repeat(1, 1, latents.size(2), 1, 1)
-        # # # DEBUG latents decode
-        # # pixel_values_vid_show = torch.cat([pixel_values_vid, pixel_values_ref_img.repeat(1, 1, pixel_values_vid.size(2), 1, 1)], dim=4)[0]
-        # # print(f"{latents.unique()=} {ref_image_latents.unique()=}")
-        # decode_latent = self.decode_latents(latents)[0]
-        # decode_ref = self.decode_latents(ref_image_latents)
-        # # print(f"{decode_ref.shape=} {decode_latent.shape}")
-        # decode_ref = decode_ref[0, :, 0].permute(1, 2, 0).cpu().detach().to(dtype=torch.float32).clamp(0, 1).numpy()
-        # decode_ref = (decode_ref * 255).astype("uint8")
-        # # c f h w [-1, 1]
-        # videos_save = []
-        # for i in range(decode_latent.size(1)):
-        #     img_item = rearrange(decode_latent[:, i, :, :], "c h w -> h w c").cpu().detach()
-        #     img_item = img_item.to(dtype=torch.float32).clamp(0, 1).numpy()
-        #     img_item = (img_item * 255).astype("uint8")
-        #     videos_save.append(np.concatenate([decode_ref, img_item], axis=1))
-        # import imageio
-        # imageio.mimwrite(f"./DEBUG_2.mp4", videos_save, fps=25)
+
         if self.config.get("noise_scheduler", "flow") == "flow":
             # print("Using flow matching")
             latents, noisy_latents, timesteps, noise, sigmas = self.get_noisy_latents(latents)
@@ -821,19 +737,6 @@ class EmoLitModule(LightningModule):
                 dtype=noise.dtype,
             )
         if self.config.get("noise_scheduler", "flow") == "flow":
-            # print("Using flow matching")
-            # u = compute_density_for_timestep_sampling(
-            #     weighting_scheme=self.config.scheduler.weighting_scheme,
-            #     batch_size=B,
-            #     logit_mean=self.config.scheduler.logit_mean,
-            #     logit_std=self.config.scheduler.logit_std,
-            #     mode_scale=self.config.scheduler.mode_scale,
-            # )
-            # indices = (u * self.noise_scheduler_copy.config.num_train_timesteps).long()
-            # timesteps = self.noise_scheduler_copy.timesteps[indices].to(device=self.device)
-            # sigmas = self.get_sigmas(latents, timesteps, n_dim=latents.ndim)
-            # noisy_latents = sigmas * noise + (1.0 - sigmas) * latents
-            # return latents, noisy_latents, timesteps, noise, sigmas
             sigmas = compute_density_for_timestep_sampling(
                 weighting_scheme=self.config.scheduler.weighting_scheme,
                 batch_size=B,
