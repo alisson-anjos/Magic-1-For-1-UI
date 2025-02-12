@@ -114,7 +114,7 @@ Please cite the following paper when using this model:
 @article{yi2025magic,
   title={Magic 1-For-1: Generating One Minute Video Clips within One Minute},
   author={Hongwei Yi, Shitong Shao, Tian Ye, Jiantong Zhao, Qingyu Yin, Michael Lingelbach, Li Yuan, Yonghong Tian, Enze Xie, Daquan Zhou},
-  journal={arXiv preprint arXiv:2211.11018},
+  journal={arXiv preprint arXiv:2502.07701},
   year={2025}
 }
 ```
