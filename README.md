@@ -6,7 +6,7 @@
 <div align="center">
     <a href="https://magic-141.github.io/Magic-141/"><img src="https://img.shields.io/static/v1?label=Project%20Page&message=Web&color=green"></a> &ensp;
     <a href=""><img src="https://img.shields.io/static/v1?label=Model&message=HuggingFace&color=yellow"></a> &ensp;
-    <a href="https://arxiv.org/abs/2211.11018"><img src="https://img.shields.io/static/v1?label=Tech Report&message=Arxiv&color=red"></a> &ensp;
+    <a href="https://arxiv.org/abs/2502.07701"><img src="https://img.shields.io/static/v1?label=Tech Report&message=Arxiv&color=red"></a> &ensp;
 </div>
 
 ## 📖 Overview
