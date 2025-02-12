@@ -20,10 +20,7 @@ We are continuously working on improving and expanding the capabilities of **Mag
 
 ## 📹 Demo
 
-<div align="center">
-  <video src="assets/demo.mp4" width="70%"> </video>
-</div>
-
+<video src="assets/demo.mp4" controls="controls" muted="muted"></video>
 
 ## 🛠️ Preparations
 
