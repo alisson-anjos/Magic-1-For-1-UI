@@ -1,0 +1,152 @@
+debug: true
+seed: 39 # random seed
+exp_name: null # name for this experiment in the local run directory and on wandb
+mode: predict # mode: one of 'train', 'eval', or 'sample'
+stage: 2 # the stage of training to start from
+n_epochs: null # the number of epochs to train for; if null, must specify n_examples
+cache_dir: cache 
+ckpt_dir: outputs/ckpt
+is_inference: true
+resume_ckpt: /home/efficiency/easytool/dmd_4_step_i2v.pth
+resume_state_dict: true
+
+model:
+  module_name: model_dit.lightning.magic_141_ti2v
+  class_name: EmoLitModule
+  denoising_model:
+    module_name: model_dit.models.magic_141_video.modules.models_audio_simpleca_v3_Ackpt
+    class_name: Magic141VideoDiffusionTransformer
+  audio_enable: false # to run TI2V.
+  activation_checkpointing_models: 
+    - module_name: model_dit.models.magic_141_video.modules.models
+      class_name: MMSingleStreamBlock
+    - module_name: model_dit.models.magic_141_video.modules.models
+      class_name: MMDoubleStreamBlock
+  # activation_checkpointing_models: []
+  base_model_path: pretrained_weights/hunyuan-video-t2v-720p/transformers
+  model_additional_kwargs: 
+    guidance_embed: false # this is not used!
+    new_param_init: norm
+    prompt_paths:
+      prompt_path: model_dit/models/magic_141_video/prompt_embeds/Magic_141_negative_prompt.pt
+      prompt_2_path: model_dit/models/magic_141_video/prompt_embeds/Magic_141_negative_prompt_2.pt
+      neg_prompt_path: model_dit/models/magic_141_video/prompt_embeds/Magic_141_empty_prompt.pt
+      neg_prompt_2_path: model_dit/models/magic_141_video/prompt_embeds/Magic_141_empty_prompt_2.pt
+      prompt_mask_path: model_dit/models/magic_141_video/prompt_embeds/Magic_141_negative_prompt_mask.pt
+      neg_prompt_mask_path: model_dit/models/magic_141_video/prompt_embeds/Magic_141_empty_prompt_mask.pt
+  dtype: torch.bfloat16
+  base_model_from_scratch: true
+  trainable_params: # This is all params
+    - img_in
+    - txt_in
+    - time_in
+    - vector_in
+    - guidance_in
+    - double_blocks
+    - single_blocks
+    - final_layer
+
+  vae_model_path: /mnt/weka/pretrained_weights/hunyuan-video-t2v-720p/vae
+  vae_dtype: torch.bfloat16
+  # vae_model_path: null
+  clip_name: null
+
+  text_encoder_path: /mnt/weka/pretrained_weights/hunyuan-video-t2v-720p/text_encoder
+  text_encoder_dtype: torch.float16
+  text_encoder2_path: /mnt/weka/pretrained_weights/hunyuan-video-t2v-720p/text_encoder_2
+  text_encoder2_dtype: torch.float16
+  text_encoder_vlm_path: /mnt/weka/pretrained_weights/llava-llama-3-8b-v1_1-transformers
+  text_encoder_vlm_dtype: torch.float16
+
+logger:
+  # neptune_project: datasharedream/video-gen # null is None, TODO, need to change accordingly
+  wandb:
+    enabled: false
+    entity: null
+    # project: "3D-Full-Attention"
+
+# callbacks settings
+callbacks:
+  - module_name: model_dit.utils.callbacks
+    class_name: BasicCallback
+    # config: config
+  - module_name: lightning.pytorch.callbacks
+    class_name: ModelCheckpoint
+    dirpath: ${ckpt_dir}/${exp_name} # where to save the checkpoints
+    every_n_train_steps: 100 # how often to save checkpoints
+    # filename: run_name + '{epoch}-{step}' # the filename for the checkpoints
+    save_top_k: -1 # -1, save all checkpoints
+
+# scheduler settings
+noise_scheduler: "flow"
+scheduler:
+  num_train_timesteps: 1000
+  
+  flow_shift: 5.0
+  flow_reverse: True
+  flow_solver: euler
+
+  weighting_scheme: "logit_normal"
+  logit_mean: 0.0
+  logit_std: 1.0 
+  mode_scale: 1.29 
+
+test_data:
+  height: 540
+  width: 960
+  image_paths_and_scales:
+    # - [
+    #   "test_examples/1.png",
+    #   21,
+    #   1.2,
+    #   "A group of friends laughing and talking animatedly around a campfire, with sparks flying and flames crackling."
+    # ]
+    # - [
+    #   "test_examples/2.png",
+    #   21,
+    #   1.2,
+    #   "A young woman giving an inspiring speech."
+    # ]
+    # - [
+    #   "test_examples/3.png",
+    #   21,
+    #   1.2,
+    #   "a woman is talking"
+    # ]
+    # - [
+    #   "test_examples/5.png",
+    #   21,
+    #   1.2,
+    #   "A student giving a presentation in a classroom attentively"
+    # ]
+    # - [
+    #   "test_examples/10.jpg",
+    #   21,
+    #   1.2,
+    #   "A person talking in a room , with a concerned expression on their face"
+    # ]
+    # - [
+    #   "test_examples/11.png",
+    #   21,
+    #   1.2,
+    #   "A young woman with a determined expression kneels before another person, her posture suggesting supplication or entreaty."
+    # ]
+    - [
+      "/mnt/weka/test_data/widescreen/youtuber01_closeup_896x512.jpg",
+      31,
+      1.2,
+      "A businessman giving a presentation in a room"
+    ]
+    # - [
+    #   "test_examples/15.png",
+    #   21,
+    #   1.2,
+    #   "A small dog standing in a field of tall grass, looking around curiously with its ears perked up."
+    # ]
+
+inference:
+  inversion: false
+  output_dir: outputs/inference_4_step
+  num_inference_steps: 4
+  guidance_scale: 1.0
+  repeat_times: 1

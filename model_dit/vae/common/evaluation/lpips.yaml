@@ -1,0 +1,6 @@
+__object__:
+  path: common.evaluation.metrics
+  name: LPIPS
+  args: as_params
+net_type: ???
+normalize: ???

@@ -1,0 +1,33 @@
+diffusers==0.32.0
+# numpy==1.23.5
+numpy==2.0.2
+omegaconf==2.2.3
+torch==2.4 --index-url https://download.pytorch.org/whl/cu124
+torchaudio==2.4 --index-url https://download.pytorch.org/whl/cu124
+torchvision==0.19.0 --index-url https://download.pytorch.org/whl/cu124
+accelerate==0.21.0
+neptune==1.11.1
+lightning
+fire
+decord==0.6.0
+transformers==4.47.0
+matplotlib
+opencv-contrib-python-headless==4.10.0.84
+orjson
+imageio==2.33.0
+ffmpeg-python
+joblib
+moviepy==1.0.3
+librosa
+einops==0.8.0
+av==11.0.0
+deepspeed==0.16.1
+yunchang==0.5.0
+ray==2.41.0
+flash-attn
+
+## the following are for audio processing
+mediapipe
+audiofile
+natsort
+ffmpeg-python
