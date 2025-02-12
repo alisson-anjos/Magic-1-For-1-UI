@@ -1,6 +1,6 @@
 <div align="center">
 
-# Magic 1-For-1: Full-Attention DiT for Video Generation
+# Magic 1-For-1: Generating One Minute Video Clips within One Minute
 
 </div>
 <div align="center">
