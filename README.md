@@ -9,17 +9,6 @@
     <a href="https://arxiv.org/abs/2211.11018"><img src="https://img.shields.io/static/v1?label=Tech Report&message=Arxiv&color=red"></a> &ensp;
 </div>
 
-<div align="center">
-  <video width="720" controls>
-    <source src="[assets/demo.mp4](https://github.com/user-attachments/assets/4af108d7-8b92-408c-812d-ac63f7f712b2)" type="video/mp4">
-  </video>
-</div>
-https://github.com/user-attachments/assets/4af108d7-8b92-408c-812d-ac63f7f712b2
-
-
-
-
-
 ## 📖 Overview
 
 **Magic 1-For-1** is an efficient image-to-video generation model designed to optimize memory usage and reduce inference latency. It decomposes the text-to-video generation task into two sub-tasks: **text-to-image generation** and **image-to-video generation**, enabling more efficient training and distillation.
@@ -32,24 +21,7 @@ We are continuously working on improving and expanding the capabilities of **Mag
 ## 📹 Demo
 
 <div align="center">
-  <video width="640" height="360" controls>
-  <source src="assets/1_repeat-0.mp4" type="video/mp4">
-</video>
-</div>
-<div align="center">
-  <video width="640" height="360" controls>
-  <source src="assets/2_repeat-0.mp4" type="video/mp4">
-</video>
-</div>
-<div align="center">
-  <video width="640" height="360" controls>
-  <source src="assets/3_repeat-0.mp4" type="video/mp4">
-</video>
-</div>
-<div align="center">
-  <video width="640" height="360" controls>
-  <source src="assets/4_repeat-0.mp4" type="video/mp4">
-</video>
+  <video src="assets/demo.mp4" width="70%"> </video>
 </div>
 
 
