@@ -21,7 +21,7 @@ We are continuously working on improving and expanding the capabilities of **Mag
 ## 📹 Demo
 
 
-https://github.com/user-attachments/assets/bec51ed0-c4f8-47c7-9bf6-6f1454562fa5
+https://github.com/user-attachments/assets/94069a93-b2bb-4900-84f7-ca7603c04ecc
 
 
 ## 🛠️ Preparations
