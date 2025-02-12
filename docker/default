@@ -1,0 +1,50 @@
+server {
+    listen 8080;  # The server listens on port 7860
+
+    # Proxy for Gradio (port 7860)
+    # location / {
+    #     proxy_pass http://0.0.0.0:7860;
+    #     proxy_set_header Host $host;
+    #     proxy_set_header X-Real-IP $remote_addr;
+    #     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    #     proxy_set_header X-Forwarded-Proto $scheme;
+    #     proxy_buffering off;             # Disable buffering for WebSocket
+    #     proxy_http_version 1.1;          # Required for WebSocket
+    #     proxy_set_header Upgrade $http_upgrade;
+    #     proxy_set_header Connection "upgrade";
+    # }
+
+    # # Proxy for JupyterLab (port 8888)
+    # location /jupyter/ {
+    #     proxy_pass http://0.0.0.0:8888/;
+    #     proxy_set_header Host $host;
+    #     proxy_set_header X-Real-IP $remote_addr;
+    #     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    #     proxy_set_header X-Forwarded-Proto $scheme;
+    #     proxy_buffering off;             
+    #     proxy_http_version 1.1;          
+    #     proxy_set_header Upgrade $http_upgrade;
+    #     proxy_set_header Connection "upgrade";
+    # }
+
+    # Access to the outputs directory
+    location /outputs {
+        alias /workspace/outputs;
+        autoindex on;
+    }
+
+    # Access to the models directory
+    location /models {
+        alias /workspace/models;
+        autoindex on;
+    }
+
+    # Access to the wav_top_200_tags.json file
+    location /repo {
+        alias /workspace/Magic-1-for-1-UI/;
+        autoindex on;
+    }
+
+    # Global configuration for large file uploads
+    client_max_body_size 10G;
+}

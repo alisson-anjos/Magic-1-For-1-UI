@@ -21,3 +21,5 @@ test_examples
 run.sh
 *.json
 .pretrained_weights
+
+*.whl
