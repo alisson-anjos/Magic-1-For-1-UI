@@ -20,7 +20,7 @@ We are continuously working on improving and expanding the capabilities of **Mag
 
 ## 📹 Demo
 
-<video src="assets/demo.mp4" controls="controls" muted="muted"></video>
+<video src="[assets/demo.mp4](https://github.com/DA-Group-PKU/Magic-1-For-1/blob/main/assets/demo.mp4)" controls="controls" muted="muted"></video>
 
 ## 🛠️ Preparations
 
